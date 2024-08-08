@@ -9,13 +9,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "TraceChannels.h"
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
 {
-	UE_LOG(LogTemp, Warning , TEXT("Werapon componment"));
-	// Default offset from the character location for projectiles to spawn
-	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
 
@@ -27,33 +25,38 @@ void UTP_WeaponComponent::Fire()
 		return;
 	}
 
-	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+
+		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+		const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+		const FVector SpawnLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
+
+		FHitResult res;
+		//World->LineTraceSingleByObjectType(res, SpawnLocation, (SpawnRotation.Quaternion().GetForwardVector() * 10) + SpawnLocation, FCollisionObjectQueryParams::DefaultObjectQueryParam);
+		World->LineTraceSingleByChannel(res, SpawnLocation, (SpawnRotation.Quaternion().GetForwardVector() * 1000) + SpawnLocation, TraceChannels::Team2);
+
+		DrawDebugLine(GetWorld(), res.TraceStart, res.TraceEnd, FColor::Red, false, 10.0f, 0, 3.0f);
+
+		if (res.GetActor() != nullptr)
 		{
+			auto name = res.GetActor()->GetName();
 
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-			
-			UE_LOG(LogTemp, Warning, TEXT("Penids"));
+			auto response = res.GetComponent()->GetCollisionResponseToChannel(TraceChannels::Team2);
 
-			FHitResult res;
-			World->LineTraceSingleByObjectType(res, SpawnLocation, (SpawnRotation.Quaternion().GetForwardVector() * 10) + SpawnLocation, FCollisionObjectQueryParams::DefaultObjectQueryParam);
+			auto resName = res.GetComponent()->GetName();
 
-			if (res.GetActor() != nullptr)
-			{
-				auto name = *res.GetActor()->GetName();
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *resName);
 
-				UE_LOG(LogTemp, Warning, TEXT("Shot %name"), *name);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("No hit"))
-			}
+			UE_LOG(LogTemp, Warning, TEXT("%i"), response);
+
+			UE_LOG(LogTemp, Warning, TEXT("Shot %s"), *name);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No hit"));
 		}
 	}
 	
