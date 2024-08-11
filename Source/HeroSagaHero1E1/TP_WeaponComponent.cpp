@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "TraceChannels.h"
+#include "EnemyCharacter.h"
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -42,21 +43,13 @@ void UTP_WeaponComponent::Fire()
 
 		if (res.GetActor() != nullptr)
 		{
-			auto name = res.GetActor()->GetName();
+			auto component = res.GetActor()->GetComponentByClass(UEnemyCharacter::StaticClass());
+			UEnemyCharacter* enemy = dynamic_cast<UEnemyCharacter*>(component);
 
-			auto response = res.GetComponent()->GetCollisionResponseToChannel(TraceChannels::Team2);
-
-			auto resName = res.GetComponent()->GetName();
-
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *resName);
-
-			UE_LOG(LogTemp, Warning, TEXT("%i"), response);
-
-			UE_LOG(LogTemp, Warning, TEXT("Shot %s"), *name);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("No hit"));
+			if (enemy != nullptr)
+			{
+				enemy->Hit(4);
+			}
 		}
 	}
 	
