@@ -20,7 +20,6 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 
 void UTP_WeaponComponent::Fire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Fire"));
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
 		return;
@@ -74,7 +73,6 @@ void UTP_WeaponComponent::Fire()
 void UTP_WeaponComponent::AttachWeapon(AHeroSagaHero1E1Character* TargetCharacter)
 {
 	Character = TargetCharacter;
-	UE_LOG(LogTemp, Warning, TEXT("Attatch we22222222apon"));
 	// Check that the character is valid, and has no rifle yet
 	if (Character == nullptr || Character->GetHasRifle())
 	{
